@@ -1,0 +1,40 @@
+{
+  "name": "waifu-board",
+  "version": "1.0.0",
+  "description": "An image board app to store and browse your favorite waifus!",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "rebuild": "npx electron-rebuild",
+    "build": "npx electron-builder",
+    "dist": "electron-builder"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@electron/rebuild": "^3.6.0",
+    "electron": "^39.2.1",
+    "electron-builder": "^24.13.3"
+  },
+  "dependencies": {
+    "cheerio": "^1.1.2",
+    "node-fetch": "^2.7.0",
+    "sqlite3": "^5.1.7"
+  },
+  "build": {
+    "appId": "com.yourname.waifuboard",
+    "productName": "Waifu Board",
+    "win": {
+      "target": "portable",
+      "icon": "build/waifuboards.ico"
+    },
+    "files": [
+      "**/*",
+      "!**/*.ts",
+      "!*.map",
+      "!package-lock.json"
+    ]
+  }
+}
