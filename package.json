@@ -1,6 +1,6 @@
 {
   "name": "waifu-board",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "An image board app to store and browse your favorite waifus!",
   "main": "main.js",
   "scripts": {
@@ -24,17 +24,14 @@
     "sqlite3": "^5.1.7"
   },
   "build": {
-    "appId": "com.yourname.waifuboard",
+    "appId": "com.skylar.waifuboard",
     "productName": "Waifu Board",
+    "directories": {
+      "output": "dist"
+    },
     "win": {
       "target": "portable",
       "icon": "public/waifuboards.ico"
-    },
-    "files": [
-      "**/*",
-      "!**/*.ts",
-      "!*.map",
-      "!package-lock.json"
-    ]
+    }
   }
 }
