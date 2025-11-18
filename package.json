@@ -28,7 +28,7 @@
     "productName": "Waifu Board",
     "win": {
       "target": "portable",
-      "icon": "build/waifuboards.ico"
+      "icon": "public/waifuboards.ico"
     },
     "files": [
       "**/*",

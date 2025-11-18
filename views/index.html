@@ -12,14 +12,12 @@
       " />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Waifu Board</title>
-  <!-- We'll use Tailwind CSS for a modern, professional look -->
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    /* Simple scrollbar styling for the dark theme */
     body {
       font-family: 'Inter', sans-serif;
       background-color: #111827;
-      /* Tailwind gray-900 */
+
     }
 
     ::-webkit-scrollbar {
@@ -28,172 +26,149 @@
 
     ::-webkit-scrollbar-track {
       background: #1f2937;
-      /* gray-800 */
+
     }
 
     ::-webkit-scrollbar-thumb {
       background: #4b5563;
-      /* gray-600 */
+
       border-radius: 5px;
       border: 2px solid #1f2937;
-      /* gray-800 */
+
     }
 
     ::-webkit-scrollbar-thumb:hover {
       background: #6b7280;
-      /* gray-500 */
+
     }
 
     .hidden {
       display: none;
     }
 
-    /* Simple focus ring for dark mode */
+
     .dark-focus-ring:focus {
       outline: 2px solid #4f46e5;
-      /* indigo-600 */
+
       outline-offset: 2px;
     }
 
-    /* Style for the active source button in the sidebar */
+
     .source-button.active {
       background-color: #4f46e5;
-      /* indigo-600 */
+
       color: white;
-      /* Add a ring to the active favicon */
+
       outline: 2px solid #4f46e5;
       outline-offset: 2px;
     }
 
-    /* Group hover for showing buttons on image cards */
+
     .image-entry:hover .image-buttons {
       opacity: 1;
     }
 
-    /* --- MODIFIED --- */
-    /* This is the new "Compact" layout (formerly "Grid") */
-    /* It uses a standard, uniform grid */
+
+
+
     .gallery-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
       gap: 1rem;
     }
 
-    /* --- NEW --- */
-    /* This is the new "Grid" layout (Masonry/Waterfall) */
-    /* It uses CSS columns to create a height-responsive layout */
+
+
+
     .gallery-masonry {
-      /* Set column count based on screen size */
+
       column-count: 2;
-      /* 2 columns on small screens */
+
       column-gap: 1rem;
     }
 
     @media (min-width: 768px) {
       .gallery-masonry {
         column-count: 3;
-        /* 3 columns on medium screens */
+
       }
     }
 
     @media (min-width: 1024px) {
       .gallery-masonry {
         column-count: 4;
-        /* 4 columns on large screens */
+
       }
     }
 
-    /* This tells each card in Masonry how to behave */
+
     .gallery-masonry .image-entry {
       display: inline-block;
-      /* Respect the column flow */
+
       width: 100%;
       margin-bottom: 1rem;
-      /* Vertical gap */
+
       break-inside: avoid;
-      /* Prevent cards from breaking across columns */
+
     }
 
-    /* --- Toast Notification Styling --- */
+
     .toast {
       position: fixed;
       bottom: 20px;
       right: 20px;
-      padding: 15px 25px 15px 15px;
-      /* Extra padding on the right for the close button */
+      padding: 15px;
       border-radius: 5px;
       color: white;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+
+
       display: flex;
-      /* Allows 'X' button to align to the right */
-      align-items: center;
-      justify-content: space-between;
-      min-width: 300px;
+      align-items: flex-start;
+
+      min-width: 350px;
       z-index: 1000;
-      /* Ensure it's above other elements */
       transition: opacity 0.3s ease-in-out;
     }
 
-    /* Red style for the 'out of date' notification */
-    .toast.update-available {
-      background-color: #e53935;
-      /* A strong red */
-    }
-
-    /* State for hiding the toast */
-    .toast.hidden {
-      opacity: 0;
-      pointer-events: none;
-      /* Prevents interaction when hidden */
+    .toast-content {
+      flex-grow: 1;
     }
 
     .toast p {
-      margin: 0;
-      flex-grow: 1;
-      /* Allows the text to take up most of the space */
+      margin: 0 0 5px 0;
     }
 
-    /* Styling for the close button */
-    .close-btn {
-      background: none;
-      border: none;
-      color: white;
-      font-size: 16px;
-      font-weight: bold;
-      cursor: pointer;
-      margin-left: 10px;
-      padding: 5px;
-      line-height: 1;
+    .toast.update-available {
+      background-color: #e53935;
+    }
+
+    .toast.hidden {
+      opacity: 0;
+      pointer-events: none;
     }
   </style>
 </head>
 
 <body class="text-gray-200 flex h-screen overflow-hidden">
-  <!-- Sidebar: Main Navigation -->
   <nav class="w-20 bg-gray-900 flex flex-col items-center flex-shrink-0 p-4 space-y-6">
-    <!-- Home / Browse -->
     <button id="browse-button" class="nav-button p-3 rounded-xl bg-indigo-600 text-white" title="Browse">
-      <!-- Heroicon: Home -->
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
         class="w-6 h-6">
         <path stroke-linecap="round" stroke-linejoin="round"
           d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
       </svg>
     </button>
-    <!-- Favorites -->
     <button id="favorites-button" class="nav-button p-3 rounded-xl text-gray-400 hover:bg-gray-700 hover:text-white"
       title="Favorites">
-      <!-- Heroicon: Star -->
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
         class="w-6 h-6">
         <path stroke-linecap="round" stroke-linejoin="round"
           d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.31h5.518a.562.562 0 01.31.95l-4.203 3.03a.563.563 0 00-.182.53l1.501 4.87a.562.562 0 01-.82.624l-4.204-3.03a.563.563 0 00-.576 0l-4.204 3.03a.562.562 0 01-.82-.624l1.501-4.87a.563.563 0 00-.182-.53L2.498 9.87a.562.562 0 01.31-.95h5.518a.563.563 0 00.475-.31L11.48 3.5z" />
       </svg>
     </button>
-    <!-- Search -->
     <button id="search-icon-button" class="nav-button p-3 rounded-xl text-gray-400 hover:bg-gray-700 hover:text-white"
       title="Search">
-      <!-- Heroicon: Magnifying Glass -->
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
         class="w-6 h-6">
         <path stroke-linecap="round" stroke-linejoin="round"
@@ -201,10 +176,8 @@
       </svg>
     </button>
 
-    <!-- NEW: Settings Button -->
     <button id="settings-button" class="nav-button p-3 rounded-xl text-gray-400 hover:bg-gray-700 hover:text-white"
       title="Settings">
-      <!-- Heroicon: Cog 6 Tooth -->
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
         class="w-6 h-6">
         <path stroke-linecap="round" stroke-linejoin="round"
@@ -212,31 +185,21 @@
       </svg>
     </button>
 
-    <!-- Divider -->
     <div class="h-px w-10 bg-gray-700"></div>
 
-    <!-- Source List (Dynamically Populated) -->
     <div id="source-list" class="flex flex-col items-center space-y-4" aria-label="Sources">
-      <!-- Source buttons will be injected here by renderer.js -->
     </div>
   </nav>
 
-  <!-- Main Content Area -->
   <div class="flex-1 flex flex-col overflow-hidden">
-    <!-- Contextual Header -->
     <header class="bg-gray-800 flex-shrink-0 flex items-center justify-between p-4 border-b border-gray-700 h-[69px]">
       <h1 id="page-title" class="text-xl font-bold text-gray-100">Browse</h1>
       <div id="header-context" class="text-sm text-gray-400"></div>
     </header>
 
-    <!-- Page: Browse -->
-    <!-- MODIFIED: Changed overflow-hidden to overflow-y-auto -->
     <div id="browse-page" class="page flex-1 overflow-y-auto">
-      <!-- Content Gallery: Layout classes will be added by JS -->
       <main id="content-gallery" class="p-4 w-full" aria-live="polite">
-        <!-- Loading spinner -->
         <div id="loading-spinner" class="hidden text-center p-10 text-gray-400">
-          <!-- Tailwind Spinner -->
           <svg class="animate-spin h-8 w-8 text-indigo-400 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none"
             viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -246,14 +209,11 @@
           </svg>
           <p class="mt-2">Loading...</p>
         </div>
-        <!-- Search results will be injected here -->
         <p id="gallery-placeholder" class="text-gray-400 text-center text-lg">
           Select a source and click the search icon to browse.
         </p>
 
-        <!-- NEW: Infinite Scroll Loading Spinner -->
         <div id="infinite-loading-spinner" class="hidden text-center p-10 text-gray-400">
-          <!-- Tailwind Spinner -->
           <svg class="animate-spin h-8 w-8 text-indigo-400 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none"
             viewBox="0 0 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -266,27 +226,20 @@
       </main>
     </div>
 
-    <!-- Page: Favorites -->
-    <!-- MODIFIED: Changed overflow-hidden to overflow-y-auto -->
     <div id="favorites-page" class="page hidden flex-1 overflow-y-auto">
-      <!-- Favorites Gallery: Layout classes will be added by JS -->
       <main id="favorites-gallery" class="p-4 w-full">
-        <!-- Favorite items will be injected here -->
       </main>
     </div>
 
-    <!-- NEW: Settings Page -->
     <div id="settings-page" class="page hidden flex-1 overflow-y-auto p-8">
       <div class="max-w-2xl mx-auto space-y-8">
         <h2 class="text-2xl font-bold text-white">Settings</h2>
 
-        <!-- Layout Options -->
         <div class="bg-gray-800 rounded-lg p-6">
           <h3 class="text-lg font-semibold text-gray-100 mb-4">
             Gallery Layout
           </h3>
           <fieldset class="space-y-4">
-            <!-- Scroll -->
             <label for="layout-scroll" class="flex items-center p-4 bg-gray-700 rounded-lg cursor-pointer">
               <input type="radio" id="layout-scroll" name="layout" value="scroll"
                 class="h-5 w-5 text-indigo-600 border-gray-500 focus:ring-indigo-500" />
@@ -295,7 +248,6 @@
                 <span class="text-sm text-gray-400">A single, vertical column of large images.</span>
               </span>
             </label>
-            <!-- Grid -->
             <label for="layout-grid" class="flex items-center p-4 bg-gray-700 rounded-lg cursor-pointer">
               <input type="radio" id="layout-grid" name="layout" value="grid"
                 class="h-5 w-5 text-indigo-600 border-gray-500 focus:ring-indigo-500" />
@@ -305,7 +257,6 @@
               </span>
             </label>
 
-            <!-- MODIFIED: "Table" is now "Compact" -->
             <label for="layout-compact" class="flex items-center p-4 bg-gray-700 rounded-lg cursor-pointer">
               <input type="radio" id="layout-compact" name="layout" value="compact"
                 class="h-5 w-5 text-indigo-600 border-gray-500 focus:ring-indigo-500" />
@@ -320,12 +271,10 @@
     </div>
   </div>
 
-  <!-- Search Modal -->
   <div id="search-modal"
     class="hidden fixed inset-0 z-30 bg-black/70 backdrop-blur-md flex items-start justify-center p-8">
     <div class="bg-gray-800 p-4 rounded-lg shadow-xl w-full max-w-lg relative">
       <button id="search-close-button" class="absolute top-3 right-3 p-2 text-gray-400 hover:text-white">
-        <!-- Heroicon: X Mark -->
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
           class="w-6 h-6">
           <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -343,13 +292,11 @@
     </div>
   </div>
 
-  <!-- NEW: Tag Info Modal -->
   <div id="tag-info-modal"
     class="hidden fixed inset-0 z-30 bg-black/70 backdrop-blur-md flex items-start justify-center p-8"
     aria-modal="true">
     <div class="bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-lg relative">
       <button id="tag-info-close-button" class="absolute top-3 right-3 p-2 text-gray-400 hover:text-white">
-        <!-- Heroicon: X Mark -->
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
           class="w-6 h-6">
           <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -357,25 +304,21 @@
       </button>
       <h2 class="text-xl font-semibold mb-4">Image Tags</h2>
       <div id="tag-info-content" class="flex flex-wrap gap-2 max-h-[60vh] overflow-y-auto">
-        <!-- Tags will be injected here by renderer.js -->
       </div>
     </div>
   </div>
 
-  <!-- Message Bar (for confirmations) -->
   <div id="message-bar"
     class="hidden fixed bottom-4 right-4 bg-green-600 text-white px-6 py-3 rounded-lg shadow-xl transition-all duration-300 transform translate-y-16">
     Message
   </div>
 
   <div id="updateToast" class="toast hidden">
-    <p>🚨 A new update is available! Version <span id="latestVersionDisplay"></span></p>
-    <button class="close-btn" onclick="hideToast()">X</button>
+    <p>An update is required for Waifu Board! newest version - <span id="latestVersionDisplay"></span></p>
   </div>
 
-  <!-- Renderer Script -->
-  <script src="./renderer.js"></script>
-  <script src="./updateNotification.js"></script>
+  <script src="../scripts/renderer.js"></script>
+  <script src="../scripts/updateNotification.js"></script>
 </body>
 
 </html>

@@ -1,37 +1,28 @@
-/*
-  main.js (Electron Main Process)
-  MODIFIED: Swapped 'better-sqlite3' for 'sqlite3' to remove C++ dependency.
-*/
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const sqlite3 = require('sqlite3').verbose();
-// --- NEW: Get paths for *both* dependencies ---
+
 const fetchPath = require.resolve('node-fetch');
 const cheerioPath = require.resolve('cheerio');
-// --- END NEW ---
 
-// --- Core paths ---
 const waifuBoardsPath = path.join(app.getPath('home'), 'WaifuBoards');
 const pluginsPath = path.join(waifuBoardsPath, 'extensions');
 const dbPath = path.join(waifuBoardsPath, 'favorites.db');
 
-// --- Ensure directories exist ---
 try {
   if (!fs.existsSync(waifuBoardsPath)) {
     fs.mkdirSync(waifuBoardsPath);
   }
   if (!fs.existsSync(pluginsPath)) {
-    // Use recursive: true in case WaifuBoards doesn't exist yet
+
     fs.mkdirSync(pluginsPath, { recursive: true });
   }
 } catch (error) {
   console.error('Failed to create directories:', error);
-  // We can probably continue, but loading/saving will fail.
+
 }
 
-// --- API Scraper Loader ---
-// This will hold our instantiated scraper classes, e.g. { 'Gelbooru': new Gelbooru() }
 const loadedScrapers = {};
 
 function loadScrapers() {
@@ -44,22 +35,19 @@ function loadScrapers() {
     .forEach((file) => {
       const filePath = path.join(pluginsPath, file);
       try {
-        // Dynamically require the scraper file
+
         const scraperModule = require(filePath);
-        // We assume the export is an object like { Gelbooru: class... }
+
         const className = Object.keys(scraperModule)[0];
         const ScraperClass = scraperModule[className];
 
-        // Basic check to see if it's a valid scraper class
         if (
           typeof ScraperClass === 'function' &&
           ScraperClass.prototype.fetchSearchResult
         ) {
-          // --- MODIFIED: Inject *both* paths ---
+
           const instance = new ScraperClass(fetchPath, cheerioPath);
-          // --- END MODIFIED ---
-          
-          // Store the instance and its baseUrl
+
           loadedScrapers[className] = {
             instance: instance,
             baseUrl: instance.baseUrl,
@@ -75,25 +63,21 @@ function loadScrapers() {
       }
     });
 }
-// --------------------
 
-// Load scrapers at startup
 loadScrapers();
 
-// --- MODIFIED: Initialize sqlite3 (async) ---
 const db = new sqlite3.Database(dbPath, (err) => {
   if (err) {
     console.error('Error opening database:', err.message);
   } else {
     console.log('Connected to the favorites database.');
-    runDatabaseMigrations(); // Run migrations after connecting
+    runDatabaseMigrations(); 
   }
 });
 
-// --- MODIFIED: Database functions are now async ---
 function runDatabaseMigrations() {
   db.serialize(() => {
-    // Create the 'favorites' table
+
     db.run(
       `
       CREATE TABLE IF NOT EXISTS favorites (
@@ -109,7 +93,6 @@ function runDatabaseMigrations() {
       }
     );
 
-    // --- Migration (Add thumbnail_url) ---
     console.log('Checking database schema for "thumbnail_url"...');
     db.all('PRAGMA table_info(favorites)', (err, columns) => {
       if (err) {
@@ -137,7 +120,6 @@ function runDatabaseMigrations() {
       }
     });
 
-    // --- Migration (Add tags) ---
     console.log('Checking database schema for "tags" column...');
     db.all('PRAGMA table_info(favorites)', (err, columns) => {
       if (err) {
@@ -163,42 +145,33 @@ function runDatabaseMigrations() {
 }
 
 function createWindow() {
-  // Create the browser window.
+
   const mainWindow = new BrowserWindow({
     width: 1000,
     height: 800,
     webPreferences: {
-      // Attach the 'preload.js' script to the window
-      // This is the secure way to expose Node.js functions to the renderer (frontend)
-      preload: path.join(__dirname, 'preload.js'),
-      // contextIsolation is true by default and is a critical security feature
+
+      preload: path.join(__dirname, '/scripts/preload.js'),
+
       contextIsolation: true,
-      // nodeIntegration should be false
+
       nodeIntegration: false,
     },
   });
 
-  // Load the index.html file into the window
-  mainWindow.loadFile('index.html');
+  mainWindow.loadFile('views/index.html');
 
-  // --- Add this line to remove the menu bar ---
   mainWindow.setMenu(null);
 }
 
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
 app.whenReady().then(() => {
-  // loadScrapers(); // MOVED: This is now called at the top
   createWindow();
 
   app.on('activate', function () {
-    // On macOS it's common to re-create a window in the app when the
-    // dock icon is clicked and there are no other windows open.
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
 });
 
-// Quit when all windows are closed, except on macOS.
 app.on('window-all-closed', function () {
   if (process.platform !== 'darwin') {
     db.close((err) => {
@@ -208,12 +181,7 @@ app.on('window-all-closed', function () {
   }
 });
 
-// --- IPC Handlers (Backend Functions) ---
-// These functions listen for calls from the 'preload.js' script
-
-// NEW: Send the list of loaded scrapers to the frontend
 ipcMain.handle('api:getSources', () => {
-  // Returns an array of objects: [{ name: 'Gelbooru', url: 'https://gelbooru.com' }, ...]
   return Object.keys(loadedScrapers).map((name) => {
     return {
       name: name,
@@ -222,12 +190,9 @@ ipcMain.handle('api:getSources', () => {
   });
 });
 
-// MODIFIED: Generic search handler now accepts a page number
 ipcMain.handle('api:search', async (event, source, query, page) => {
   try {
-    // Check if the requested source was successfully loaded
     if (loadedScrapers[source] && loadedScrapers[source].instance) {
-      // Pass the page number to the scraper
       const results = await loadedScrapers[source].instance.fetchSearchResult(
         query,
         page
@@ -241,16 +206,12 @@ ipcMain.handle('api:search', async (event, source, query, page) => {
     return { success: false, error: error.message };
   }
 });
-
-// --- MODIFIED: All db handlers are now async Promises ---
-
-// Handle request to get all favorites
 ipcMain.handle('db:getFavorites', () => {
   return new Promise((resolve, reject) => {
     db.all('SELECT * FROM favorites', [], (err, rows) => {
       if (err) {
         console.error('Error getting favorites:', err.message);
-        resolve([]); // Resolve with empty array on error
+        resolve([]); 
       } else {
         resolve(rows);
       }
@@ -258,7 +219,6 @@ ipcMain.handle('db:getFavorites', () => {
   });
 });
 
-// Handle request to add a favorite
 ipcMain.handle('db:addFavorite', (event, fav) => {
   return new Promise((resolve) => {
     const stmt =
@@ -267,7 +227,7 @@ ipcMain.handle('db:addFavorite', (event, fav) => {
       stmt,
       [fav.id, fav.title, fav.imageUrl, fav.thumbnailUrl, fav.tags],
       function (err) {
-        // Must use 'function' to get 'this'
+
         if (err) {
           if (err.code.includes('SQLITE_CONSTRAINT')) {
             resolve({ success: false, error: 'Item is already a favorite.' });
@@ -283,12 +243,11 @@ ipcMain.handle('db:addFavorite', (event, fav) => {
   });
 });
 
-// Handle request to remove a favorite
 ipcMain.handle('db:removeFavorite', (event, id) => {
   return new Promise((resolve) => {
     const stmt = 'DELETE FROM favorites WHERE id = ?';
     db.run(stmt, id, function (err) {
-      // Must use 'function' to get 'this'
+
       if (err) {
         console.error('Error removing favorite:', err.message);
         resolve({ success: false, error: err.message });
