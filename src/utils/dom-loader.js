@@ -1,0 +1,26 @@
+export function getDomElements() {
+  return {
+    browseButton: document.getElementById('browse-button'),
+    favoritesButton: document.getElementById('favorites-button'),
+    settingsButton: document.getElementById('settings-button'),
+    browsePage: document.getElementById('browse-page'),
+    pageTitle: document.getElementById('page-title'),
+    headerContext: document.getElementById('header-context'),
+    searchIconButton: document.getElementById('search-icon-button'),
+    searchModal: document.getElementById('search-modal'),
+    searchCloseButton: document.getElementById('search-close-button'),
+    searchInput: document.getElementById('search-input'),
+    searchButton: document.getElementById('search-button'),
+    sourceList: document.getElementById('source-list'),
+    contentGallery: document.getElementById('content-gallery'),
+    favoritesGallery: document.getElementById('favorites-gallery'),
+    loadingSpinner: document.getElementById('loading-spinner'),
+    infiniteLoadingSpinner: document.getElementById('infinite-loading-spinner'),
+    messageBar: document.getElementById('message-bar'),
+    galleryPlaceholder: document.getElementById('gallery-placeholder'),
+    layoutRadios: document.querySelectorAll('input[name="layout"]'),
+    tagInfoModal: document.getElementById('tag-info-modal'),
+    tagInfoCloseButton: document.getElementById('tag-info-close-button'),
+    tagInfoContent: document.getElementById('tag-info-content'),
+  };
+}

@@ -1,6 +1,7 @@
 const GITHUB_OWNER = 'ItsSkaiya'; 
 const GITHUB_REPO = 'WaifuBoard'; 
-const CURRENT_VERSION = 'v1.2.0'; 
+const CURRENT_VERSION = 'v1.3.0'; 
+const UPDATE_CHECK_INTERVAL = 5 * 60 * 1000; 
 
 let currentVersionDisplay;
 let latestVersionDisplay;
@@ -17,6 +18,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     checkForUpdates(); 
+
+    setInterval(checkForUpdates, UPDATE_CHECK_INTERVAL);
 });
 
 function showToast(latestVersion) {
@@ -28,6 +31,13 @@ function showToast(latestVersion) {
 
     } else {
         console.error("Error: Cannot display toast because one or more DOM elements were not found.");
+    }
+}
+
+function hideToast() {
+    if (updateToast) {
+        updateToast.classList.add('hidden');
+        updateToast.classList.remove('update-available');
     }
 }
 

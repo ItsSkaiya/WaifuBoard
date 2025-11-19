@@ -1,6 +1,6 @@
 {
   "name": "waifu-board",
-  "version": "v1.2.0",
+  "version": "v1.3.0",
   "description": "An image board app to store and browse your favorite waifus!",
   "main": "main.js",
   "scripts": {
@@ -19,7 +19,9 @@
     "electron-builder": "^24.13.3"
   },
   "dependencies": {
+    "@ryuziii/discord-rpc": "^1.0.1-rc.1",
     "cheerio": "^1.1.2",
+    "dotenv": "^17.2.3",
     "node-fetch": "^2.7.0",
     "sqlite3": "^5.1.7"
   },
