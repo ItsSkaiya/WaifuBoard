@@ -28,6 +28,9 @@
   "build": {
     "appId": "com.skylar.waifuboard",
     "productName": "Waifu Board",
+    "extraResources": [
+      "./.env"
+    ],
     "win": {
       "target": "portable",
       "icon": "public/waifuboards.ico"

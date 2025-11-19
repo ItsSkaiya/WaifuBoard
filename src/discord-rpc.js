@@ -1,5 +1,17 @@
+const { app } = require('electron');
+const path = require('path');
+const fs = require('fs');
 const { DiscordRPCClient } = require('@ryuziii/discord-rpc');
-require('dotenv').config();
+
+const envPath = app.isPackaged 
+    ? path.join(process.resourcesPath, '.env')
+    : path.join(__dirname, '../.env');
+
+if (fs.existsSync(envPath)) {
+    require('dotenv').config({ path: envPath });
+} else {
+    console.warn(`Discord RPC: Could not find .env file at ${envPath}`);
+}
 
 let rpcClient;
 let reconnectTimer;
@@ -8,11 +20,11 @@ function initDiscordRPC() {
   const clientId = process.env.DISCORD_CLIENT_ID;
 
   if (!clientId) {
-    console.warn('Discord RPC: Invalid or missing Client ID. Check your .env file.');
+    console.warn('Discord RPC: No Client ID found. Make sure .env is copied to resources.');
     return;
   }
 
-  console.log(`Discord RPC: Initializing with Client ID ending in ...${clientId.slice(-4)}`);
+  console.log(`Discord RPC: Initializing with Client ID ...${clientId.slice(-4)}`);
 
   if (rpcClient) {
     try { rpcClient.destroy(); } catch (e) {}
@@ -44,7 +56,9 @@ function initDiscordRPC() {
   });
 
   rpcClient.on('disconnected', () => {
-    console.log('Discord RPC: Disconnected. Attempting to reconnect in 10s...');
+    if (!app.isPackaged) {
+        console.log('Discord RPC: Disconnected. Attempting to reconnect in 10s...');
+    }
     if (!reconnectTimer) {
         reconnectTimer = setTimeout(() => {
             initDiscordRPC();
@@ -64,16 +78,17 @@ function initDiscordRPC() {
 function setActivity() {
   if (!rpcClient) return;
 
+  const versionString = `v${app.getVersion()}`;
+
   try {
-      const activity = {
+      rpcClient.setActivity({
         details: 'Browsing',
         state: 'In App',
         startTimestamp: new Date(),
-        largeImageKey: 'bigpicture',
+        largeImageKey: 'bigpicture', 
+        largeImageText: versionString,
         instance: false,
-      };
-      rpcClient.setActivity(activity);
-      console.log('Discord RPC: Activity set successfully');
+      });
   } catch (error) {
       console.error("Discord RPC: Failed to set activity", error);
   }
