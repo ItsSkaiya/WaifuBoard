@@ -7,9 +7,6 @@ const initDatabase = require('./src/database/db-init');
 const { initDiscordRPC } = require('./src/discord-rpc');
 const headlessBrowser = require('./src/utils/headless-browser'); 
 
-const fetchPath = require.resolve('node-fetch');
-const cheerioPath = require.resolve('cheerio');
-
 const waifuBoardsPath = path.join(app.getPath('home'), 'WaifuBoards');
 const pluginsPath = path.join(waifuBoardsPath, 'extensions');
 const dbPath = path.join(waifuBoardsPath, 'favorites.db');
@@ -25,43 +22,33 @@ try {
   console.error('Failed to create directories:', error);
 }
 
-const loadedScrapers = {};
+const availableScrapers = {};
 
 function loadScrapers() {
-  console.log('Loading scrapers...');
-  console.log(`Checking for plugins in: ${pluginsPath}`);
+  console.log('Scanning for plugins...');
+  
+  let files = [];
+  try {
+      files = fs.readdirSync(pluginsPath).filter((file) => file.endsWith('.js'));
+  } catch (e) {
+      console.error("Failed to read plugins directory", e);
+      return;
+  }
 
-  const files = fs.readdirSync(pluginsPath);
-  files
-    .filter((file) => file.endsWith('.js'))
-    .forEach((file) => {
+  files.forEach((file) => {
+      const name = file.replace('.js', ''); 
       const filePath = path.join(pluginsPath, file);
-      try {
-        const scraperModule = require(filePath);
-        const className = Object.keys(scraperModule)[0];
-        const ScraperClass = scraperModule[className];
-
-        if (
-          typeof ScraperClass === 'function' &&
-          ScraperClass.prototype.fetchSearchResult
-        ) {
-          const instance = new ScraperClass(fetchPath, cheerioPath, headlessBrowser);
-
-          loadedScrapers[className] = {
-            instance: instance,
-            baseUrl: instance.baseUrl,
-          };
-          console.log(
-            `Successfully loaded scraper: ${className} from ${instance.baseUrl}`
-          );
-        } else {
-          console.warn(`File ${file} does not export a valid scraper class.`);
-        }
-      } catch (error) {
-        console.error(`Failed to load scraper from ${file}:`, error);
-      }
-    });
+      
+      availableScrapers[name] = {
+          name: name,
+          path: filePath,
+          instance: null 
+      };
+  });
+  
+  console.log(`Found ${files.length} plugins. (Lazy Loaded)`);
 }
+
 
 loadScrapers();
 
@@ -100,7 +87,7 @@ app.on('window-all-closed', function () {
   }
 });
 
-const apiHandlers = require('./src/ipc/api-handlers')(loadedScrapers);
+const apiHandlers = require('./src/ipc/api-handlers')(availableScrapers, headlessBrowser);
 const dbHandlers = require('./src/ipc/db-handlers')(db);
 
 ipcMain.handle('api:getSources', apiHandlers.getSources);

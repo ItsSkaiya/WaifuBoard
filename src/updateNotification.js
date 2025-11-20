@@ -1,6 +1,6 @@
 const GITHUB_OWNER = 'ItsSkaiya'; 
 const GITHUB_REPO = 'WaifuBoard'; 
-const CURRENT_VERSION = 'v1.3.0'; 
+const CURRENT_VERSION = 'v1.3.1'; 
 const UPDATE_CHECK_INTERVAL = 5 * 60 * 1000; 
 
 let currentVersionDisplay;
