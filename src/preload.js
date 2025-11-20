@@ -7,6 +7,7 @@ contextBridge.exposeInMainWorld('api', {
   removeFavorite: (id) => ipcRenderer.invoke('db:removeFavorite', id),
 
   search: (source, query) => ipcRenderer.invoke('api:search', source, query),
+  toggleDevTools: () => ipcRenderer.send('toggle-dev-tools'),
 
   getSources: () => ipcRenderer.invoke('api:getSources'),
 });

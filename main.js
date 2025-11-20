@@ -67,7 +67,6 @@ function createWindow() {
 
   mainWindow.loadFile('views/index.html');
   mainWindow.setMenu(null);
-  // mainWindow.webContents.openDevTools();
 }
 
 app.whenReady().then(() => {
@@ -96,3 +95,7 @@ ipcMain.handle('api:search', apiHandlers.search);
 ipcMain.handle('db:getFavorites', dbHandlers.getFavorites);
 ipcMain.handle('db:addFavorite', dbHandlers.addFavorite);
 ipcMain.handle('db:removeFavorite', dbHandlers.removeFavorite);
+
+ipcMain.on('toggle-dev-tools', (event) => {
+  event.sender.toggleDevTools();
+});
