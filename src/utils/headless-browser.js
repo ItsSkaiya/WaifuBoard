@@ -6,20 +6,41 @@ class HeadlessBrowser {
 
     const win = new BrowserWindow({
       show: false, 
-      width: 800,
-      height: 600,
+      width: 1920, 
+      height: 1080,
       webPreferences: {
         offscreen: true,  
         contextIsolation: false,  
         nodeIntegration: false,
-        images: true,  
+        images: false, 
         webgl: false,   
+        backgroundThrottling: false,
       },
     });
 
     try {
       const userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
       win.webContents.setUserAgent(userAgent);
+
+      const session = win.webContents.session;
+      const filter = { urls: ['*://*/*'] };
+      
+      session.webRequest.onBeforeRequest(filter, (details, callback) => {
+        const url = details.url.toLowerCase();
+        
+        const blockExtensions = [
+          '.css', '.woff', '.woff2', '.ttf', '.svg', '.eot', 
+          'google-analytics', 'doubleclick', 'facebook', 'twitter', 'adsystem' 
+        ];
+
+        const isBlocked = blockExtensions.some(ext => url.includes(ext));
+
+        if (isBlocked) {
+          return callback({ cancel: true }); 
+        }
+
+        return callback({ cancel: false });
+      });
 
       await win.loadURL(url, { userAgent });
 
@@ -53,8 +74,7 @@ class HeadlessBrowser {
             clearTimeout(timer);
             resolve(true);
           } else {
-            // FIX: Use setTimeout because requestAnimationFrame stops in hidden windows
-            setTimeout(check, 100); 
+            setTimeout(check, 50); 
           }
         };
         check();

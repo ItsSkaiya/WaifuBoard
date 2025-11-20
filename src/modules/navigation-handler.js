@@ -18,8 +18,7 @@ export function showPage(pageId, domRefs, callbacks, state) {
   });
 
   document.querySelectorAll('.nav-button').forEach((tab) => {
-    tab.classList.remove('bg-indigo-600', 'text-white');
-    tab.classList.add('text-gray-400', 'hover:bg-gray-700');
+    tab.classList.remove('active');
   });
 
   const activePage = document.getElementById(pageId);
@@ -46,7 +45,6 @@ export function showPage(pageId, domRefs, callbacks, state) {
   }
 
   if (activeTab) {
-    activeTab.classList.add('bg-indigo-600', 'text-white');
-    activeTab.classList.remove('text-gray-400', 'hover:bg-gray-700');
+    activeTab.classList.add('active');
   }
 }

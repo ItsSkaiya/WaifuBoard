@@ -56,8 +56,8 @@ const db = initDatabase(dbPath);
 
 function createWindow() {
   const mainWindow = new BrowserWindow({
-    width: 1000,
-    height: 800,
+    width: 1324,
+    height: 868,
     webPreferences: {
       preload: path.join(__dirname, '/src/preload.js'),
       contextIsolation: true,
