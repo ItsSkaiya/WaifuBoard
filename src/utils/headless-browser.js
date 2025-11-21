@@ -2,7 +2,14 @@ const { BrowserWindow } = require('electron');
 
 class HeadlessBrowser {
   async scrape(url, evalFunc, options = {}) {
-    const { waitSelector = null, timeout = 15000 } = options;
+    const { 
+        waitSelector = null, 
+        timeout = 15000, 
+        args = [],
+        scrollToBottom = false,
+        renderWaitTime = 2000,
+        loadImages = true 
+    } = options; 
 
     const win = new BrowserWindow({
       show: false, 
@@ -12,7 +19,7 @@ class HeadlessBrowser {
         offscreen: true,  
         contextIsolation: false,  
         nodeIntegration: false,
-        images: false, 
+        images: loadImages, 
         webgl: false,   
         backgroundThrottling: false,
       },
@@ -23,32 +30,37 @@ class HeadlessBrowser {
       win.webContents.setUserAgent(userAgent);
 
       const session = win.webContents.session;
-      const filter = { urls: ['*://*/*'] };
-      
-      session.webRequest.onBeforeRequest(filter, (details, callback) => {
+      session.webRequest.onBeforeRequest({ urls: ['*://*/*'] }, (details, callback) => {
         const url = details.url.toLowerCase();
-        
         const blockExtensions = [
-          '.css', '.woff', '.woff2', '.ttf', '.svg', '.eot', 
-          'google-analytics', 'doubleclick', 'facebook', 'twitter', 'adsystem' 
+          '.woff', '.woff2', '.ttf', '.eot', 
+          'google-analytics', 'doubleclick', 'facebook', 'twitter', 'adsystem'
         ];
-
-        const isBlocked = blockExtensions.some(ext => url.includes(ext));
-
-        if (isBlocked) {
-          return callback({ cancel: true }); 
-        }
-
+        if (blockExtensions.some(ext => url.includes(ext))) return callback({ cancel: true });
         return callback({ cancel: false });
       });
 
       await win.loadURL(url, { userAgent });
 
       if (waitSelector) {
-        await this.waitForSelector(win, waitSelector, timeout);
+        try {
+            await this.waitForSelector(win, waitSelector, timeout);
+        } catch (e) {
+            console.warn(`[Headless] Timeout waiting for ${waitSelector}, proceeding anyway...`);
+        }
       }
 
-      const result = await win.webContents.executeJavaScript(`(${evalFunc.toString()})()`);
+      if (scrollToBottom) {
+          await this.smoothScrollToBottom(win);
+      }
+
+      if (renderWaitTime > 0) {
+          await new Promise(resolve => setTimeout(resolve, renderWaitTime));
+      }
+
+      const result = await win.webContents.executeJavaScript(
+        `(${evalFunc.toString()}).apply(null, ${JSON.stringify(args)})`
+      );
       
       return result;
 
@@ -70,15 +82,40 @@ class HeadlessBrowser {
         }, ${timeout});
 
         const check = () => {
-          if (document.querySelector('${selector}')) {
+          const el = document.querySelector('${selector}');
+          if (el) {
             clearTimeout(timer);
             resolve(true);
           } else {
-            setTimeout(check, 50); 
+            setTimeout(check, 200); 
           }
         };
         check();
       });
+    `;
+    await win.webContents.executeJavaScript(script);
+  }
+
+  async smoothScrollToBottom(win) {
+    const script = `
+        new Promise((resolve) => {
+            let totalHeight = 0;
+            const distance = 400; 
+            const maxScrolls = 200; 
+            let currentScrolls = 0;
+
+            const timer = setInterval(() => {
+                const scrollHeight = document.body.scrollHeight;
+                window.scrollBy(0, distance);
+                totalHeight += distance;
+                currentScrolls++;
+
+                if(totalHeight >= scrollHeight - window.innerHeight || currentScrolls >= maxScrolls){
+                    clearInterval(timer);
+                    resolve();
+                }
+            }, 20); 
+        });
     `;
     await win.webContents.executeJavaScript(script);
   }

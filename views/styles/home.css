@@ -136,6 +136,9 @@ body {
     margin-right: 1rem;
 }
 
+a, a:visited, a:hover, a:active {
+    text-decoration: none;
+}
 
 .nav-button span {
     opacity: 0;

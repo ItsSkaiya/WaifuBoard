@@ -4,23 +4,40 @@ export async function populateSources(sourceList) {
   sourceList.innerHTML = '';
   let initialSource = '';
 
+  console.log("Raw sources received from backend:", sources);
+
   if (sources && sources.length > 0) {
     sources.forEach((source) => {
+      if (source.name.toLowerCase().includes('tenor')) {
+          if (source.type !== 'image-board') {
+              console.error(`CRITICAL: Tenor extension found, but type is "${source.type}". It will be hidden.`);
+          } else {
+              console.log("SUCCESS: Tenor extension passed type check.");
+          }
+      }
+
+      if (source.type !== 'image-board') {
+          return; 
+      }
+
       const button = document.createElement('button');
-      
       button.className = 'source-button hover:bg-gray-700 hover:text-white transition-all duration-200';
-      
       button.dataset.source = source.name;
       button.title = source.name;
 
       let mainDomain = source.url;
       try {
-        const hostname = new URL(source.url).hostname;
-        const parts = hostname.split('.');
-        if (parts.length > 2 && ['api', 'www'].includes(parts[0])) {
-          mainDomain = parts.slice(1).join('.');
+        const urlToParse = source.url || source.baseUrl || "";
+        if (urlToParse) {
+            const hostname = new URL(urlToParse).hostname;
+            const parts = hostname.split('.');
+            if (parts.length > 2 && ['api', 'www'].includes(parts[0])) {
+            mainDomain = parts.slice(1).join('.');
+            } else {
+            mainDomain = hostname;
+            }
         } else {
-          mainDomain = hostname;
+            mainDomain = source.name;
         }
       } catch (e) {
         mainDomain = source.name;
@@ -63,12 +80,14 @@ export async function populateSources(sourceList) {
       const firstButton = sourceList.children[0];
       firstButton.classList.add('active');
       initialSource = firstButton.dataset.source;
+    } else {
+       console.warn("All sources were filtered out. Check 'type' property in your extensions.");
     }
     
     setupCarousel(sourceList);
 
   } else {
-    console.warn('No sources loaded.');
+    console.warn('No sources loaded from API.');
   }
   return initialSource;
 }

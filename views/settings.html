@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; connect-src 'self' https:;" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Waifu Board</title>
+    <title>Waifu Board - Settings</title>
     <link rel="stylesheet" href="styles/home.css">
 </head>
 
@@ -12,7 +12,7 @@
     <aside class="sidebar">
         <br>
         <nav style="display: flex; flex-direction: column; gap: 0.5rem;">
-            <a href="index.html" class="nav-button active" title="Image Boards">
+            <a href="index.html" class="nav-button" title="Image Boards">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <rect x="3" y="3" width="7" height="7"></rect>
                     <rect x="14" y="3" width="7" height="7"></rect>
@@ -31,7 +31,7 @@
         </nav>
 
         <nav style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: auto;">
-            <a href="settings.html" class="nav-button" title="Settings">
+            <a href="settings.html" class="nav-button active" title="Settings">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <circle cx="12" cy="12" r="3"></circle>
                     <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
@@ -54,51 +54,26 @@
             <button id="search-icon-button" class="hidden"></button>
             <button id="search-close-button" class="hidden"></button>
             <div id="header-context" class="hidden"></div>
-            <h1 id="page-title" class="hidden">Dashboard</h1>
+            <h1 id="page-title" class="hidden">Settings</h1>
         </header>
 
         <div class="content-view">
-            <div id="browse-page" class="page">
-                <h3 style="color: var(--text-tertiary); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 1rem;">Sources</h3>
-                <div id="source-list"></div>
+            <div id="settings-page" class="page">
+                <div style="margin-bottom: 2rem;">
+                    <h2>Settings</h2>
+                    <p style="color: var(--text-secondary);">App configuration.</p>
+                </div>
 
-                <h3 style="color: var(--text-tertiary); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; margin: 2rem 0 1rem 0;">Library</h3>
-                <main id="content-gallery" class="gallery-masonry">
-                    <div id="gallery-placeholder" class="loading-state" style="width: 100%; grid-column: 1 / -1;">
-                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#52525b" stroke-width="1">
-                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                            <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                            <polyline points="21 15 16 10 5 21"></polyline>
-                        </svg>
-                        <p>Select a source above to load content</p>
+                <div class="settings-grid">
+                    <div class="settings-card">
+                        <p style="color: var(--text-tertiary); font-style: italic;">No settings available currently.</p>
                     </div>
-                    <div id="loading-spinner" class="hidden loading-state" style="width: 100%; grid-column: 1 / -1;">
-                        <svg style="width:32px; height:32px; color: var(--accent); animation: spin 1s linear infinite;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"></path>
-                        </svg>
-                        <p>Fetching images...</p>
-                    </div>
-                    <div id="infinite-loading-spinner" class="hidden loading-state" style="width: 100%; grid-column: 1 / -1;">
-                        <p>Loading more...</p>
-                    </div>
-                </main>
+                </div>
             </div>
         </div>
     </div>
 
-    <div id="tag-info-modal" class="hidden">
-        <div>
-            <button id="tag-info-close-button">&times;</button>
-            <h3 style="margin-top:0; margin-bottom: 1rem;">Tags</h3>
-            <div id="tag-info-content" class="tag-cloud"></div>
-        </div>
-    </div>
-
-    <div id="search-modal" class="hidden"></div>
     <div id="message-bar" class="toast hidden">Message</div>
-    <div id="updateToast" class="toast hidden" style="border-left-color: #eab308;">
-        <p>Update Available: <span id="latestVersionDisplay">v1.x</span></p>
-    </div>
 
     <script type="module" src="../src/renderer.js"></script>
     <script type="module" src="../scripts/main.js"></script>
