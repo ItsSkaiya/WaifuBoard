@@ -1,27 +1,22 @@
-export async function populateSources(sourceList) {
-  console.log('Requesting sources from main process...');
+export async function populateSources(sourceList, targetType = 'image-board') {
+  console.log(`Requesting sources for type: ${targetType}...`);
   const sources = await window.api.getSources();
   sourceList.innerHTML = '';
   let initialSource = '';
 
-  console.log("Raw sources received from backend:", sources);
+  console.log("Raw sources received:", sources);
 
   if (sources && sources.length > 0) {
     sources.forEach((source) => {
-      if (source.name.toLowerCase().includes('tenor')) {
-          if (source.type !== 'image-board') {
-              console.error(`CRITICAL: Tenor extension found, but type is "${source.type}". It will be hidden.`);
-          } else {
-              console.log("SUCCESS: Tenor extension passed type check.");
-          }
-      }
-
-      if (source.type !== 'image-board') {
+      
+      if (targetType !== 'all' && source.type !== targetType) {
           return; 
       }
 
       const button = document.createElement('button');
+      
       button.className = 'source-button hover:bg-gray-700 hover:text-white transition-all duration-200';
+      
       button.dataset.source = source.name;
       button.title = source.name;
 
@@ -81,7 +76,7 @@ export async function populateSources(sourceList) {
       firstButton.classList.add('active');
       initialSource = firstButton.dataset.source;
     } else {
-       console.warn("All sources were filtered out. Check 'type' property in your extensions.");
+       console.warn(`No sources found for type: ${targetType}`);
     }
     
     setupCarousel(sourceList);

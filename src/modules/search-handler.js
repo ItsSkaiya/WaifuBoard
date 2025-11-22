@@ -27,7 +27,9 @@ export async function performSearch(
   contentGallery.innerHTML = '';
   updateHeader();
 
-  searchModal.classList.add('hidden');
+  if (searchModal) {
+      searchModal.classList.add('hidden');
+  }
 
   await loadMoreResults(currentSource, 1, currentLayout, domRefs, callbacks);
 }
@@ -42,9 +44,7 @@ export async function loadMoreResults(
   const { loadingSpinner, infiniteLoadingSpinner, contentGallery } = domRefs;
   const { applyLayoutToGallery, createImageCard } = callbacks;
 
-  if (isLoading || !hasNextPage) {
-    return;
-  }
+  if (isLoading || !hasNextPage) return;
 
   isLoading = true;
 
@@ -64,16 +64,11 @@ export async function loadMoreResults(
       if (loadingSpinner) loadingSpinner.classList.add('hidden');
       if (infiniteLoadingSpinner) infiniteLoadingSpinner.classList.add('hidden');
 
-      if (
-        !result.success ||
-        !result.data.results ||
-        result.data.results.length === 0
-      ) {
+      if (!result.success || !result.data.results || result.data.results.length === 0) {
         hasNextPage = false;
         if (page === 1) {
           applyLayoutToGallery(contentGallery, currentLayout);
-          contentGallery.innerHTML =
-            '<p class="text-gray-400 text-center text-lg">No results found. Please try another search term.</p>';
+          contentGallery.innerHTML = '<p class="text-gray-400 text-center text-lg">No results found.</p>';
         }
         isLoading = false;
         return;
@@ -85,8 +80,7 @@ export async function loadMoreResults(
         if (page === 1) {
            hasNextPage = false;
            applyLayoutToGallery(contentGallery, currentLayout);
-           contentGallery.innerHTML =
-            '<p class="text-gray-400 text-center text-lg">Found results, but none had valid images.</p>';
+           contentGallery.innerHTML = '<p class="text-gray-400 text-center text-lg">No valid images found.</p>';
         }
         isLoading = false;
         return;
@@ -96,21 +90,23 @@ export async function loadMoreResults(
       validResults.forEach((item) => {
         const thumbnailUrl = item.image;
         const displayUrl = item.sampleImageUrl || item.fullImageUrl || thumbnailUrl;
-
+        const title = item.title || ''; 
+        
         const card = createImageCard(
           item.id.toString(),
-          item.tags,
+          item.tags || [],
           displayUrl,
           thumbnailUrl,
-          'browse'
+          item.type || 'browse'
         );
+        
+        if (title) card.dataset.title = title;
+        
         fragment.appendChild(card);
       });
 
       contentGallery.appendChild(fragment);
-      
       applyLayoutToGallery(contentGallery, currentLayout);
-
       hasNextPage = result.data.hasNextPage;
       
   } catch (error) {

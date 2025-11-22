@@ -1,17 +1,37 @@
-const { BrowserWindow } = require('electron');
+const { BrowserWindow, session } = require('electron');
 
 class HeadlessBrowser {
-  async scrape(url, evalFunc, options = {}) {
-    const { 
-        waitSelector = null, 
-        timeout = 15000, 
-        args = [],
-        scrollToBottom = false,
-        renderWaitTime = 2000,
-        loadImages = true 
-    } = options; 
+  constructor() {
+    this.win = null;
+    this.currentConfig = null;
+  }
 
-    const win = new BrowserWindow({
+  /**
+   * Pre-loads the browser window on app startup.
+   */
+  async init() {
+      console.log('[Headless] Pre-warming browser instance...');
+      await this.getWindow(true); // Default to loading images
+      console.log('[Headless] Browser ready.');
+  }
+
+  /**
+   * Gets an existing window or creates a new one if config changes/window missing.
+   */
+  async getWindow(loadImages) {
+    // If window exists and config matches, reuse it (FAST PATH)
+    if (this.win && !this.win.isDestroyed() && this.currentConfig === loadImages) {
+      return this.win;
+    }
+
+    // Otherwise, destroy old window and create new one (SLOW PATH)
+    if (this.win && !this.win.isDestroyed()) {
+      this.win.destroy();
+    }
+
+    this.currentConfig = loadImages;
+    
+    this.win = new BrowserWindow({
       show: false, 
       width: 1920, 
       height: 1080,
@@ -22,36 +42,75 @@ class HeadlessBrowser {
         images: loadImages, 
         webgl: false,   
         backgroundThrottling: false,
+        autoplayPolicy: 'no-user-gesture-required',
+        disableHtmlFullscreenWindowResize: true
       },
     });
 
+    const userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36';
+    this.win.webContents.setUserAgent(userAgent);
+
+    const ses = this.win.webContents.session;
+    
+    ses.webRequest.onBeforeRequest({ urls: ['*://*/*'] }, (details, callback) => {
+      const url = details.url.toLowerCase();
+      const type = details.resourceType;
+
+      if (
+        type === 'font' || 
+        type === 'stylesheet' || 
+        type === 'media' || 
+        type === 'websocket' ||
+        type === 'manifest'
+      ) {
+        return callback({ cancel: true });
+      }
+
+      const blockList = [
+        'google-analytics', 'doubleclick', 'facebook', 'twitter', 'adsystem', 
+        'analytics', 'tracker', 'pixel', 'quantserve', 'newrelic'
+      ];
+      
+      if (blockList.some(keyword => url.includes(keyword))) return callback({ cancel: true });
+      
+      if (!loadImages && (type === 'image' || url.match(/\.(jpg|jpeg|png|gif|webp|svg)$/))) {
+        return callback({ cancel: true });
+      }
+
+      return callback({ cancel: false });
+    });
+
+    // Load a blank page to keep the process alive and ready
+    await this.win.loadURL('about:blank');
+
+    return this.win;
+  }
+
+  async scrape(url, evalFunc, options = {}) {
+    const { 
+        waitSelector = null, 
+        timeout = 10000, 
+        args = [],
+        scrollToBottom = false,
+        renderWaitTime = 0, 
+        loadImages = true 
+    } = options; 
+
     try {
-      const userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
-      win.webContents.setUserAgent(userAgent);
+      const win = await this.getWindow(loadImages);
 
-      const session = win.webContents.session;
-      session.webRequest.onBeforeRequest({ urls: ['*://*/*'] }, (details, callback) => {
-        const url = details.url.toLowerCase();
-        const blockExtensions = [
-          '.woff', '.woff2', '.ttf', '.eot', 
-          'google-analytics', 'doubleclick', 'facebook', 'twitter', 'adsystem'
-        ];
-        if (blockExtensions.some(ext => url.includes(ext))) return callback({ cancel: true });
-        return callback({ cancel: false });
-      });
-
-      await win.loadURL(url, { userAgent });
+      await win.loadURL(url);
 
       if (waitSelector) {
         try {
             await this.waitForSelector(win, waitSelector, timeout);
         } catch (e) {
-            console.warn(`[Headless] Timeout waiting for ${waitSelector}, proceeding anyway...`);
+            console.warn(`[Headless] Timeout waiting for ${waitSelector}, proceeding...`);
         }
       }
 
       if (scrollToBottom) {
-          await this.smoothScrollToBottom(win);
+          await this.turboScroll(win);
       }
 
       if (renderWaitTime > 0) {
@@ -66,28 +125,26 @@ class HeadlessBrowser {
 
     } catch (error) {
       console.error('Headless Scrape Error:', error.message);
-      throw error;
-    } finally {
-      if (!win.isDestroyed()) {
-        win.destroy();
+      // Force recreation next time if something crashed
+      if (this.win) {
+          try { this.win.destroy(); } catch(e){}
+          this.win = null;
       }
+      throw error;
     }
   }
 
   async waitForSelector(win, selector, timeout) {
     const script = `
       new Promise((resolve, reject) => {
-        const timer = setTimeout(() => {
-          reject(new Error('Timeout waiting for selector: ${selector}'));
-        }, ${timeout});
-
+        const start = Date.now();
         const check = () => {
-          const el = document.querySelector('${selector}');
-          if (el) {
-            clearTimeout(timer);
+          if (document.querySelector('${selector}')) {
             resolve(true);
+          } else if (Date.now() - start > ${timeout}) {
+            reject(new Error('Timeout'));
           } else {
-            setTimeout(check, 200); 
+            requestAnimationFrame(check);
           }
         };
         check();
@@ -96,23 +153,23 @@ class HeadlessBrowser {
     await win.webContents.executeJavaScript(script);
   }
 
-  async smoothScrollToBottom(win) {
+  async turboScroll(win) {
     const script = `
         new Promise((resolve) => {
-            let totalHeight = 0;
-            const distance = 400; 
-            const maxScrolls = 200; 
-            let currentScrolls = 0;
-
+            let lastHeight = 0;
+            let sameHeightCount = 0;
             const timer = setInterval(() => {
                 const scrollHeight = document.body.scrollHeight;
-                window.scrollBy(0, distance);
-                totalHeight += distance;
-                currentScrolls++;
-
-                if(totalHeight >= scrollHeight - window.innerHeight || currentScrolls >= maxScrolls){
-                    clearInterval(timer);
-                    resolve();
+                window.scrollTo(0, scrollHeight);
+                if (scrollHeight === lastHeight) {
+                    sameHeightCount++;
+                    if (sameHeightCount >= 5) {
+                        clearInterval(timer);
+                        resolve();
+                    }
+                } else {
+                    sameHeightCount = 0;
+                    lastHeight = scrollHeight;
                 }
             }, 20); 
         });

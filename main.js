@@ -73,6 +73,7 @@ function createWindow() {
 app.whenReady().then(() => {
   createWindow();
   initDiscordRPC();
+  headlessBrowser.init()
   app.on('activate', function () {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
@@ -92,6 +93,10 @@ const dbHandlers = require('./src/ipc/db-handlers')(db);
 
 ipcMain.handle('api:getSources', apiHandlers.getSources);
 ipcMain.handle('api:search', apiHandlers.search);
+
+ipcMain.handle('api:getChapters', apiHandlers.getChapters);
+ipcMain.handle('api:getPages', apiHandlers.getPages);
+ipcMain.handle('api:getMetadata', apiHandlers.getMetadata);
 
 ipcMain.handle('db:getFavorites', dbHandlers.getFavorites);
 ipcMain.handle('db:addFavorite', dbHandlers.addFavorite);
