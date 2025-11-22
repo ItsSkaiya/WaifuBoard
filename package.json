@@ -1,6 +1,6 @@
 {
   "name": "waifu-board",
-  "version": "v1.5.0",
+  "version": "v1.6.0",
   "description": "An image board app to store and browse your favorite waifus!",
   "main": "main.js",
   "scripts": {
