@@ -55,6 +55,10 @@ function initDiscordRPC() {
     }, 1000);
   });
 
+  rpcClient.on('error', (err) => {
+      console.log('[Discord RPC] Background warning:', err.message);
+  });
+
   rpcClient.on('disconnected', () => {
     if (!app.isPackaged) {
         console.log('Discord RPC: Disconnected. Attempting to reconnect in 10s...');
@@ -69,6 +73,7 @@ function initDiscordRPC() {
   try {
     rpcClient.connect().catch(err => {
         console.error('Discord RPC: Connection failed', err.message);
+      return;
     });
   } catch (err) {
     console.error('Discord RPC: Error initializing', err);
